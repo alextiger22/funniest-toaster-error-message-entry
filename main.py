@@ -1,40 +1,28 @@
-"""Entry for make.fun funniest-toaster-error-message.
+"""Funniest toaster error message entry for the make.fun bounty.
 
-Writes one funny error message a kitchen toaster would show its owner
-to /output/entry.txt, then validates the output: UTF-8 text, a single
-line, 1 to 120 characters.
-
-Deterministic: the program writes the same line every run. No network
-access.
+This program writes a single funny error message — the line a kitchen
+toaster would show its owner — to the entry output file.
 """
 
 import os
-import sys
 
-ENTRY = "ERROR: The bread has unionized. Toasting is suspended until further notice."
-MAX_CHARS = 120
+ENTRY_LINE = "ERROR: The bread has unionized. Toasting is suspended until further notice."
 
 
-def _validate(path: str) -> None:
-    """Check the written file is one UTF-8 line within the char limit."""
-    with open(path, "r", encoding="utf-8") as f:
-        text = f.read()
-    if "\n" in text:
-        sys.exit("entry.txt must be a single line")
-    if not 1 <= len(text) <= MAX_CHARS:
-        sys.exit("entry is %d chars, expected 1-%d" % (len(text), MAX_CHARS))
-    if text != ENTRY:
-        sys.exit("entry.txt does not match the entry line")
-
-
-def main() -> None:
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
-    dest = os.path.join(out_dir, "entry.txt")
-    with open(dest, "w", encoding="utf-8") as f:
-        f.write(ENTRY)
-    _validate(dest)
-    print("wrote %s (%d chars)" % (dest, len(ENTRY)))
+def main():
+    """Write the entry line to the output file."""
+    output_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    os.makedirs(output_dir, exist_ok=True)
+    entry_path = os.path.join(output_dir, "entry.txt")
+    with open(entry_path, "w", encoding="utf-8") as handle:
+        handle.write(ENTRY_LINE)
+    # Validate the output: read it back and check it is exactly one
+    # UTF-8 line of 1 to 120 characters matching the entry line.
+    with open(entry_path, "r", encoding="utf-8") as handle:
+        written = handle.read()
+    if written != ENTRY_LINE or not 1 <= len(written) <= 120 or "\n" in written:
+        raise SystemExit("error: output validation failed")
+    print(f"Wrote entry ({len(ENTRY_LINE)} characters) to {entry_path}")
 
 
 if __name__ == "__main__":
